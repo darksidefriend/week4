@@ -48,40 +48,28 @@
 //   console.log(`Server is running on http://localhost:${PORT}`);
 // });
 
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-const { DateTime } = require('luxon');
+const express = require("express");
 
 const app = express();
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 3000;
 
-// Маршрут /login
-app.get('/login', (req, res) => {
-    res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1');
+const LOGIN = "23886bd5-1b0d-4860-8ed8-d9106051b1a1";
+
+app.get("/login", (req, res) => {
+  res.send(LOGIN);
 });
 
-// Маршрут /hour
-app.get('/hour', (req, res) => {
-    // Получаем текущее время в Московском часовом поясе
-    const moscowTime = DateTime.now().setZone('Europe/Moscow');
-    const hour = moscowTime.hour.toString().padStart(2, '0');
-    res.send(hour);
+app.get("/hour", (req, res) => {
+  const now = new Date();
+  const moscowHour = new Intl.DateTimeFormat("ru-RU", {
+    hour: "2-digit",
+    hour12: false,
+    timeZone: "Europe/Moscow",
+  }).format(now);
+
+  res.send(moscowHour);
 });
 
-// Опционально: обработка корневого маршрута
-app.get('/', (req, res) => {
-    res.send('Сервер работает. Доступные маршруты: /login, /hour');
-});
-
-// Для HTTPS нужны SSL сертификаты
-// В продакшене используйте настоящие сертификаты
-const options = {
-    key: fs.readFileSync('key.pem'),  // Замените на путь к вашему приватному ключу
-    cert: fs.readFileSync('cert.pem')  // Замените на путь к вашему сертификату
-};
-
-// Создаем HTTPS сервер
-https.listen(PORT, () => {
-    console.log(`HTTPS сервер запущен на порту ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
