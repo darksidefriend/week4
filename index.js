@@ -82,6 +82,6 @@ const options = {
 };
 
 // Создаем HTTPS сервер
-https.createServer(options, app).listen(PORT, () => {
+https.listen(PORT, () => {
     console.log(`HTTPS сервер запущен на порту ${PORT}`);
 });
