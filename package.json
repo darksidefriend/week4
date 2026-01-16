@@ -19,6 +19,7 @@
   "dependencies": {
     "mongoose": "^9.1.4",
     "express": "5.2.1",
-    "body-parser": "2.2.2"
+    "body-parser": "2.2.2",
+    "luxon": "3.7.2"
   }
 }
