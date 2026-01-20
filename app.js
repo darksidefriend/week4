@@ -117,5 +117,10 @@ function createApp(express, bodyParser, createReadStream, currentFilePath) {
   return app;
 }
 
-module.exports = { createApp, SYSTEM_LOGIN };
+export default function(express, bodyParser, createReadStream, crypto, http) {
+    return createApp(express, bodyParser, createReadStream, crypto, http);
+}
 
+export { SYSTEM_LOGIN };
+
+// module.exports = { createApp, SYSTEM_LOGIN };
