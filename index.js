@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const pug = require('pug');
 
-const https = require('https');
+const http = require('http');
 const fs = require('fs');
 
 // TODO: Добавьте ваш логин
@@ -59,6 +59,10 @@ const options = {
   cert: fs.readFileSync('/your-cert-path/fullchain.pem')
 };
 
-const server = https.createServer(options, app);
+// const server = https.createServer(options, app);
 
-server.listen(PORT);
+// server.listen(PORT);
+
+http.createServer(app).listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
