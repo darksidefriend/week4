@@ -1,12 +1,6 @@
 const express = require('express');
-const axios = require('axios');
-const pug = require('pug');
-
-const http = require('http');
-const fs = require('fs');
-
-// TODO: Добавьте ваш логин
-const login = '23886bd5-1b0d-4860-8ed8-d9106051b1a1';
+const puppeteer = require('puppeteer');
+const http = require('http'); // Изменено с https на http
 
 const app = express();
 
@@ -18,51 +12,80 @@ app.use((req, res, next) => {
 });
 
 app.get('/login/', (_, res) => {
-  res.send(login);
+  // TODO: Добавьте ваш логин
+  res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1');
 });
 
-app.get('/wordpress/wp-json/wp/v2/posts/1', (_, res) => {
-  res.json({
-    id: 1,
-    slug: login,
-    title: {
-      rendered: login
-    },
-    content: {
-      rendered: "",
-      protected: false
-    }
-  });
+app.get('/test/', async (req, res) => {
+  const targetURL = req.query.URL;
+  
+  if (!targetURL) {
+    return res.status(400).send('Missing URL parameter');
+  }
+
+  try {
+    // Конфигурация для Render.com
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process' // Важно для ограниченных ресурсов
+      ],
+      // Render.com автоматически устанавливает Chrome
+      executablePath: process.env.CHROMIUM_PATH || 
+                    (process.platform === 'linux' ? '/usr/bin/chromium-browser' : null)
+    });
+
+    const page = await browser.newPage();
+    
+    // Установка таймаутов
+    page.setDefaultNavigationTimeout(10000);
+    page.setDefaultTimeout(10000);
+    
+    await page.goto(targetURL, { 
+      waitUntil: ['networkidle2', 'domcontentloaded'],
+      timeout: 10000
+    });
+
+    await page.click('#bt');
+
+    await page.waitForFunction(() => {
+      const input = document.querySelector('#inp');
+      return input && input.value;
+    }, { timeout: 5000 });
+
+    const result = await page.evaluate(() => {
+      return document.querySelector('#inp').value;
+    });
+
+    await browser.close();
+
+    res.send(result || 'No result found');
+  } catch (error) {
+    console.error('Error in /test endpoint:', error);
+    res.status(500).send(`Error: ${error.message}`);
+  }
 });
 
-app.use(express.json());
-
-app.post('/render/', async (req, res) => {
-  const { random2, random3 } = req.body;
-  const { addr } = req.query;
-
-  const templateResponse = await axios.get(addr);
-  const pugTemplate = templateResponse.data;
-
-  const compiled = pug.compile(pugTemplate);
-  const html = compiled({ random2, random3 });
-
-  res.set('Content-Type', 'text/html');
-  res.send(html);
+// Проверка работоспособности (для health check)
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
 });
 
-const PORT = 443;
+// Корневой путь
+app.get('/', (req, res) => {
+  res.send('Puppeteer server is running');
+});
 
-// TODO: Добавьте пути к вашим сертификатам
-// const options = {
-//   key: fs.readFileSync('/your-key-path/privkey.pem'),
-//   cert: fs.readFileSync('/your-cert-path/fullchain.pem')
-// };
+const PORT = process.env.PORT || 3000; // Render.com использует свой PORT
 
-// const server = https.createServer(options, app);
+// На Render.com HTTPS обрабатывается на их балансировщике
+// Используем HTTP сервер
+const server = http.createServer(app);
 
-// server.listen(PORT);
-
-http.createServer(app).listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
