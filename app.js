@@ -120,9 +120,9 @@ function createApp(express, bodyParser, createReadStream, currentFilePath) {
   return app;
 }
 
-// export default function(express, bodyParser, createReadStream, crypto, http) {
-//     return createApp(express, bodyParser, createReadStream, crypto, http);
-// }
+export default function(express, bodyParser, createReadStream, crypto, http) {
+    return createApp(express, bodyParser, createReadStream, crypto, http);
+}
 
 // export { SYSTEM_LOGIN };
 
