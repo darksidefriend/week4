@@ -1,75 +1,12 @@
+// index.js
+import express from "express";
+import { createReadStream } from "fs";
+import crypto from "crypto";
+import http from "http";
+import bodyParser from "body-parser";
 
-// const express = require("express");
-// const mongoose = require("mongoose");
-// const bodyParser = require("body-parser");
-// const http = require("http");
+import appSrc from "./app.js";
 
-// const app = express();
-// const PORT = process.env.PORT || 3000;
+const app = appSrc(express, bodyParser, createReadStream, crypto, http);
 
-// const CORS = {
-//   "Access-Control-Allow-Origin": "*",
-//   "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-//   "Access-Control-Allow-Headers":
-//     "x-test,ngrok-skip-browser-warning,Content-Type,Accept,Access-Control-Allow-Headers",
-// };
-
-// const s = http.createServer((req, res) => {
-//   if (req.url === "/result4/") {
-//     let body = "";
-
-//     req.on("data", (chunk) => {
-//       body += chunk;
-//     });
-
-//     req.on("end", () => {
-//       let parsedBody = body;
-
-//       res.writeHead(200, { ...CORS });
-
-//       res.write(
-//         JSON.stringify({
-//           message: "23886bd5-1b0d-4860-8ed8-d9106051b1a1",
-//           "x-result": req.headers["x-test"],
-//           "x-body": String(parsedBody),
-//         })
-//       );
-
-//       res.end();
-//     });
-
-//     return;
-//   }
-
-//   res.end();
-// });
-
-// s.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
-
-const express = require("express");
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const LOGIN = "23886bd5-1b0d-4860-8ed8-d9106051b1a1";
-
-app.get("/login", (req, res) => {
-  res.send(LOGIN);
-});
-
-app.get("/hour", (req, res) => {
-  const now = new Date();
-  const moscowHour = new Intl.DateTimeFormat("ru-RU", {
-    hour: "2-digit",
-    hour12: false,
-    timeZone: "Europe/Moscow",
-  }).format(now);
-
-  res.send(moscowHour);
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(3000);
