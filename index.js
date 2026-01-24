@@ -1,37 +1,60 @@
-const express = require('express');
-const sharp = require('sharp');
+import express from "express";
 
 const app = express();
+const LOGIN = "daniil_savelev"; // Твой логин
 
-app.get('/makeimage', (req, res) => {
-  const width = parseInt(req.query.width, 10) || 100;
-  const height = parseInt(req.query.height, 10) || 100;
+// Ссылка на скрипт с логикой (функция f(n))
+const SECRET_SCRIPT_URL = "https://kodaktor.ru/j/51e39e4";
 
-  sharp({
-    create: {
-      width: width,
-      height: height,
-      channels: 4,
-      background: { r: 255, g: 255, b: 255, alpha: 1 }
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  next();
+});
+
+app.get("/login", (req, res) => {
+  res.send(LOGIN);
+});
+
+// --- УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ОБРАБОТКИ (ХАКЕРСКАЯ) ---
+const zombieHandler = async (req, res) => {
+  try {
+    let num = req.params.num;
+
+    if (!num) {
+      num = Object.keys(req.query)[0];
     }
-  })
-      .png()
-      .toBuffer((err, data) => {
-        if (err) {
-          return res.status(500).send('Error generating image');
-        }
-        res.set('Content-Type', 'image/png');
-        res.send(data);
-      });
-});
 
-app.get('/login', (req, res) => {
-  const login = 'daniil_savelev'; // TODO: поменять
-  res.send(login);
-});
+    if (!num) {
+      return res.status(400).send("Error: No number provided");
+    }
 
-const PORT = process.env.PORT || 3000;
+    console.log(`Calculating for: ${num}`);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+    const response = await fetch(SECRET_SCRIPT_URL);
+    if (!response.ok) throw new Error("Script not found");
+    const scriptCode = await response.text();
+
+    const calculate = new Function(scriptCode + `; return f(${num});`);
+
+    const result = calculate();
+
+    console.log(`Result: ${result}`);
+
+    res.send(String(result));
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error: " + error.message);
+  }
+};
+
+// Ловит /zombie?1234
+app.get("/zombie", zombieHandler);
+
+// Ловит /zombie/1234
+app.get("/zombie/:num", zombieHandler);
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
 });
