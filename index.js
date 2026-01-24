@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/login/', (_, res) => {
   // TODO: Добавьте ваш логин
-  res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1');
+  res.send('daniil_savelev');
 });
 
 app.get('/hour/', (_, res) => {
