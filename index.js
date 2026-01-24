@@ -1,4 +1,4 @@
-// index.js
+// // index.js
 // import express from "express";
 // import { createReadStream } from "fs";
 // import crypto from "crypto";
@@ -11,16 +11,23 @@
 
 // app.listen(3000);
 
+// index.js
 const express = require("express");
-const { createReadStream } = require("fs");
-const crypto = require("crypto");
-const http = require("http");
 const bodyParser = require("body-parser");
+const { createReadStream } = require("fs");
+const path = require("path");
 
-const appSrc = require("./app.js");
+const { createApp } = require("./app");
 
-const app = appSrc(express, bodyParser, createReadStream, crypto, http);
+const PORT = process.env.PORT || 3000;
 
-app.listen(3000, () => {
-    console.log("Server is running on port 3000");
+const app = createApp(
+  express,
+  bodyParser,
+  createReadStream,
+  path.resolve(__filename)
+);
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
