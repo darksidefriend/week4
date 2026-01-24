@@ -1,36 +1,49 @@
+const express = require('express');
 const https = require('https');
-const querystring = require('querystring');
 
-const postData = querystring.stringify({
-  login: 'daniil_savelev'
+const app = express();
+const LOGIN = "daniil_savelev"; // заменить login
+
+app.get('/login', (req, res) => {
+    res.type('text/plain').send(LOGIN);
 });
 
-const options = {
-  hostname: 'kodaktor.ru',
-  path: '/api/chunks',
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Content-Length': Buffer.byteLength(postData)
-  }
-};
+app.get('/id/:N', (req, res) => {
+    const N = req.params.N;
+    const options = {
+        hostname: 'nd.kodaktor.ru',
+        path: `/users/${N}`,
+        method: 'GET',
+        headers: {
+            // Content-Type заголовок отсутствует намеренно
+        }
+    };
 
-let count = 0;
+    https.get(options, (response) => {
+        let data = '';
 
-const req = https.request(options, (res) => {
-  res.on('data', (chunk) => {
-    count++;
-    console.log(`chunk ${count}:`, chunk.toString());
-  });
+        response.on('data', (chunk) => {
+            data += chunk;
+        });
 
-  res.on('end', () => {
-    console.log('Количество событий data:', count);
-  });
+        response.on('end', () => {
+            try {
+                const json = JSON.parse(data);
+                if (json.login) {
+                    res.type('text/plain').send(json.login);
+                } else {
+                    res.status(404).send('Login field not found');
+                }
+            } catch (e) {
+                res.status(500).send('Ошибка обработки данных');
+            }
+        });
+    }).on('error', (err) => {
+        res.status(500).send('Ошибка запроса к удалённому серверу');
+    });
 });
 
-req.on('error', (e) => {
-  console.error(e);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Сервер запущен на порту ${PORT}`);
 });
-
-req.write(postData);
-req.end();
