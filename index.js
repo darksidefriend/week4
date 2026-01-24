@@ -1,82 +1,36 @@
-import { privateDecrypt, constants } from "crypto";
-import Busboy from "busboy";
+const express = require('express');
+const multer = require('multer');
+const sharp = require('sharp');
+const https = require('https');
+const fs = require('fs');
 
-export async function handler (event, context) {
-  return new Promise((resolve, reject) => {
-    const contentType = event.headers["content-type"] || event.headers["Content-Type"];
-    if (!contentType || !contentType.includes("multipart/form-data")) {
-      resolve({
-        statusCode: 400,
-        headers: { "Content-Type": "text/plain" },
-        body: "Content-Type must be multipart/form-data",
-      });
-      return;
-    }
+const app = express();
+const upload = multer(); // сохраняем в оперативной памяти
 
-    const busboy = Busboy({ headers: { "content-type": contentType } });
+const LOGIN = "login"; // заменить login
 
-    let privateKey = null;
-    let secretData = null;
+app.get('/login', (req, res) => {
+    res.type('text/plain').send(LOGIN);
+});
 
-    busboy.on("file", (fieldname, file, filename, encoding, mimetype) => {
-      let chunks = [];
-      file.on("data", (chunk) => chunks.push(chunk));
-      file.on("end", () => {
-        const buf = Buffer.concat(chunks);
-        if (fieldname === "key") privateKey = buf.toString("utf8");
-        if (fieldname === "secret") secretData = buf;
-      });
-    });
-
-    busboy.on("field", (fieldname, value) => {
-      if (fieldname === "key") privateKey = value;
-      if (fieldname === "secret") secretData = Buffer.from(value, "utf8");
-    });
-
-    busboy.on("finish", () => {
-      if (!privateKey || !secretData) {
-        resolve({
-          statusCode: 400,
-          headers: { "Content-Type": "text/plain" },
-          body: 'Missing fields "key" or "secret"',
-        });
-        return;
-      }
-
-      let decrypted;
-      try {
-        const s = secretData.toString("utf8").replace(/\s+/g, "");
-        const maybeBase64 = /^[A-Za-z0-9+/=]+$/.test(s);
-        const ciphertext = maybeBase64 ? Buffer.from(s, "base64") : secretData;
-
-        try {
-          decrypted = privateDecrypt(
-            { key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING },
-            ciphertext
-          );
-        } catch {
-          decrypted = privateDecrypt(
-            { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
-            ciphertext
-          );
+app.post("/size2json", upload.single("image"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "Не передано поле image" });
         }
-      } catch (err) {
-        resolve({
-          statusCode: 400,
-          headers: { "Content-Type": "text/plain" },
-          body: "Decryption failed: " + err.message,
+
+        const metadata = await sharp(req.file.buffer).metadata();
+
+        res.json({
+            width: metadata.width,
+            height: metadata.height
         });
-        return;
-      }
+    } catch (err) {
+        res.status(500).json({ error: "Ошибка обработки изображения" });
+    }
+});
 
-      resolve({
-        statusCode: 200,
-        headers: { "Content-Type": "text/plain" },
-        body: decrypted.toString("utf8"),
-      });
-    });
-
-    const buffer = Buffer.from(event.body, event.isBase64Encoded ? "base64" : "utf8");
-    busboy.end(buffer);
-  });
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Сервер запущен на порту ${PORT}`);
+});
