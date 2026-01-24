@@ -1,11 +1,8 @@
 
 // app.js
-// const fs = require("fs");
-// const crypto = require("crypto");
-// const http = require("http");
-import fs from "fs";
-import crypto from "crypto";
-import http from "http";
+const fs = require("fs");
+const crypto = require("crypto");
+const http = require("http");
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -120,10 +117,4 @@ function createApp(express, bodyParser, createReadStream, currentFilePath) {
   return app;
 }
 
-export default function(express, bodyParser, createReadStream, crypto, http) {
-    return createApp(express, bodyParser, createReadStream, crypto, http);
-}
-
-// export { SYSTEM_LOGIN };
-
-// module.exports = { createApp, SYSTEM_LOGIN };
+module.exports = { createApp, SYSTEM_LOGIN };
