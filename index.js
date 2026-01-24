@@ -20,42 +20,19 @@ app.get('/login/', (_, res) => {
   res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1');
 });
 
-app.post('/insert/', async (req, res) => {
-  let client;
-
-  try {
-    const { login, password, URL } = req.body;
-
-    client = new MongoClient(URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+app.get('/hour/', (_, res) => {
+  // TODO: Добавьте ваш логин
+  const formatter = new Intl.DateTimeFormat('ru-RU', {
+      hour: '2-digit',
+      hour12: false,
+      timeZone: 'Europe/Moscow'
     });
 
-    await client.connect();
-
-    // Get DB from URL -> "readusers"
-    const dbName = URL.split('/').pop().split('?')[0];
-    const db = client.db(dbName);
-
-    const usersCollection = db.collection('users');
-
-    const userDocument = {
-      login: login,
-      password: password,
-      createdAt: new Date()
-    };
-
-    await usersCollection.insertOne(userDocument);
-
-    res.sendStatus(200);
-  } catch (err) {
-    res.sendStatus(500);
-  } finally {
-    if (client) {
-      await client.close();
-    }
-  }
+    const hour = formatter.format(new Date());
+    res.statusCode = 200;
+    res.end(hour);
 });
+
 
 const PORT = 443;
 
