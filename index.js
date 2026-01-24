@@ -7,7 +7,7 @@ const fs = require('fs');
 const app = express();
 const upload = multer(); // сохраняем в оперативной памяти
 
-const LOGIN = "login"; // заменить login
+const LOGIN = "daniiL_savelev"; // заменить login
 
 app.get('/login', (req, res) => {
     res.type('text/plain').send(LOGIN);
