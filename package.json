@@ -29,6 +29,7 @@
     "multer" : "2.0.2",
     "sharp": "0.34.5",
     "busboy": "^1.6.0",
-    "crypto" : "1.0.1"
+    "crypto" : "1.0.1",
+    "playwright" : "1.58.0"
   }
 }
