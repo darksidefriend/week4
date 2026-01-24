@@ -229,9 +229,9 @@ function createApp(express, bodyParser, createReadStream, currentFilePath) {
     }
   });
 
-  app.all("*", (_req, res) => {
-    res.set(TEXT_PLAIN_HEADER).send(SYSTEM_LOGIN);
-  });
+  app.all(/.*/, (_req, res) => {
+  res.set(TEXT_PLAIN_HEADER).send(SYSTEM_LOGIN);
+});
 
   return app;
 }
