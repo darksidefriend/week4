@@ -3,34 +3,27 @@ const { MongoClient } = require('mongodb');
 
 const app = express();
 
-/* CORS */
+/* === CORS (ДОЛЖНО БЫТЬ ПЕРВЫМ) === */
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    '*'
-  );
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET,POST,OPTIONS'
-  );
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.sendStatus(204);
   }
 
   next();
 });
 
-/* body parser для application/x-www-form-urlencoded */
+/* body parser */
 app.use(express.urlencoded({ extended: false }));
-
-/* ===== ROUTES ===== */
 
 /* /login */
 app.get(['/login', '/login/'], (_, res) => {
   res.type('text/plain');
-  res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← ВПИШИ СВОЙ ЛОГИН
+  res.end('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← ВПИШИ ЛОГИН БЕЗ ПРОБЕЛОВ
 });
 
 /* /insert */
@@ -38,8 +31,6 @@ app.post(['/insert', '/insert/'], async (req, res) => {
   let client;
 
   try {
-    console.log('BODY:', req.body);
-
     const { login, password, URL } = req.body;
 
     if (!login || !password || !URL) {
@@ -51,7 +42,6 @@ app.post(['/insert', '/insert/'], async (req, res) => {
       useUnifiedTopology: true
     }).connect();
 
-    /* определяем БД из строки подключения */
     const dbName = URL.split('/').pop().split('?')[0];
     const db = client.db(dbName);
 
@@ -62,17 +52,13 @@ app.post(['/insert', '/insert/'], async (req, res) => {
 
     res.sendStatus(200);
   } catch (err) {
-    console.error('ERROR:', err);
+    console.error(err);
     res.sendStatus(500);
   } finally {
     if (client) await client.close();
   }
 });
 
-/* ===== START SERVER ===== */
-
+/* start */
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT);
