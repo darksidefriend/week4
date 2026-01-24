@@ -59,6 +59,10 @@ app.post(['/insert', '/insert/'], async (req, res) => {
   }
 });
 
+app.all('/r', (req, res) => {
+  res.sendStatus(200);
+});
+
 /* start */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT);
