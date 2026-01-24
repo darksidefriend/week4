@@ -1,33 +1,17 @@
-// // index.js
-// import express from "express";
-// import { createReadStream } from "fs";
-// import crypto from "crypto";
-// import http from "http";
-// import bodyParser from "body-parser";
+import express from "express";
+import bodyParser from "body-parser";
+import { createReadStream } from "fs";
+import crypto from "crypto";
+import http from "http";
 
-// import appSrc from "./app.js";
+import appSrc from "./app.js";
 
-// const app = appSrc(express, bodyParser, createReadStream, crypto, http);
-
-// app.listen(3000);
-
-// index.js
-const express = require("express");
-const bodyParser = require("body-parser");
-const { createReadStream } = require("fs");
-const path = require("path");
-
-const { createApp } = require("./app");
-
-const PORT = process.env.PORT || 3000;
-
-const app = createApp(
+const app = appSrc(
   express,
   bodyParser,
   createReadStream,
-  path.resolve(__filename)
+  crypto,
+  http
 );
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(process.env.PORT || 3000);
