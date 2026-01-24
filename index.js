@@ -1,14 +1,13 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
+const puppeteer = require('puppeteer');
 
 const app = express();
 
-/* === CORS (ДОЛЖНО БЫТЬ ПЕРВЫМ) === */
+/* ===== CORS (для LMS) ===== */
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
-  res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
@@ -17,52 +16,57 @@ app.use((req, res, next) => {
   next();
 });
 
-/* body parser */
-app.use(express.urlencoded({ extended: false }));
-
-/* /login */
+/* ===== /login ===== */
 app.get(['/login', '/login/'], (_, res) => {
   res.type('text/plain');
-  res.end('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← ВПИШИ ЛОГИН БЕЗ ПРОБЕЛОВ
+  res.end('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← ВПИШИ СВОЙ ЛОГИН
 });
 
-/* /insert */
-app.post(['/insert', '/insert/'], async (req, res) => {
-  let client;
+/* ===== /test ===== */
+app.get(['/test', '/test/'], async (req, res) => {
+  const targetURL = req.query.URL;
+
+  if (!targetURL) {
+    return res.sendStatus(400);
+  }
+
+  let browser;
 
   try {
-    const { login, password, URL } = req.body;
-
-    if (!login || !password || !URL) {
-      return res.sendStatus(400);
-    }
-
-    client = await new MongoClient(URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).connect();
-
-    const dbName = URL.split('/').pop().split('?')[0];
-    const db = client.db(dbName);
-
-    await db.collection('users').insertOne({
-      login: String(login),
-      password: String(password)
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox'
+      ]
     });
 
-    res.sendStatus(200);
+    const page = await browser.newPage();
+    await page.goto(targetURL, { waitUntil: 'networkidle2' });
+
+    await page.click('#bt');
+
+    await page.waitForFunction(() => {
+      const inp = document.querySelector('#inp');
+      return inp && inp.value;
+    }, { timeout: 2000 });
+
+    const result = await page.evaluate(() => {
+      return document.querySelector('#inp').value;
+    });
+
+    res.type('text/plain');
+    res.end(String(result));
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
   } finally {
-    if (client) await client.close();
+    if (browser) await browser.close();
   }
 });
 
-app.all('/r', (req, res) => {
-  res.sendStatus(200);
-});
-
-/* start */
+/* ===== START ===== */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT);
+app.listen(PORT, () => {
+  console.log(`Server started on ${PORT}`);
+});
