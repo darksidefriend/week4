@@ -5,54 +5,63 @@ const app = express();
 
 /* CORS */
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
-/* body parser */
-app.use(express.urlencoded({ extended: true }));
+/* body parser для application/x-www-form-urlencoded */
+app.use(express.urlencoded({ extended: false }));
+
+/* ===== ROUTES ===== */
 
 /* /login */
-app.get('/login/', (_, res) => {
-  res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← сюда свой логин
+app.get(['/login', '/login/'], (_, res) => {
+  res.type('text/plain');
+  res.send('23886bd5-1b0d-4860-8ed8-d9106051b1a1'); // ← ВПИШИ СВОЙ ЛОГИН
 });
 
 /* /insert */
-app.post('/insert/', async (req, res) => {
+app.post(['/insert', '/insert/'], async (req, res) => {
   let client;
 
   try {
+    console.log('BODY:', req.body);
+
     const { login, password, URL } = req.body;
 
-    client = new MongoClient(URL, {
+    if (!login || !password || !URL) {
+      return res.sendStatus(400);
+    }
+
+    client = await new MongoClient(URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true
-    });
+    }).connect();
 
-    await client.connect();
-
+    /* определяем БД из строки подключения */
     const dbName = URL.split('/').pop().split('?')[0];
     const db = client.db(dbName);
-    const users = db.collection('users');
 
-    await users.insertOne({
+    await db.collection('users').insertOne({
       login: String(login),
       password: String(password)
     });
 
     res.sendStatus(200);
   } catch (err) {
-    console.error(err);
+    console.error('ERROR:', err);
     res.sendStatus(500);
   } finally {
     if (client) await client.close();
   }
 });
 
-/* Render PORT */
+/* ===== START SERVER ===== */
+
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
