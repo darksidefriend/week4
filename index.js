@@ -37,7 +37,10 @@ app.post(['/insert', '/insert/'], async (req, res) => {
       return res.sendStatus(400);
     }
 
-    client = await new MongoClient(URL).connect();
+    client = await new MongoClient(URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).connect();
 
     const dbName = URL.split('/').pop().split('?')[0];
     const db = client.db(dbName);
