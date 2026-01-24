@@ -1,41 +1,36 @@
-const express = require('express');
-const { MongoClient } = require('mongodb');
+const https = require('https');
+const querystring = require('querystring');
 
-const http = require('http');
-const fs = require('fs');
-
-const app = express();
-
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', '*');
-  next();
+const postData = querystring.stringify({
+  login: 'daniil_savelev'
 });
 
-app.use(express.urlencoded({ extended: true }));
+const options = {
+  hostname: 'kodaktor.ru',
+  path: '/api/chunks',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Length': Buffer.byteLength(postData)
+  }
+};
 
-app.get('/login/', (_, res) => {
-  // TODO: Добавьте ваш логин
-  res.send('daniil_savelev');
+let count = 0;
+
+const req = https.request(options, (res) => {
+  res.on('data', (chunk) => {
+    count++;
+    console.log(`chunk ${count}:`, chunk.toString());
+  });
+
+  res.on('end', () => {
+    console.log('Количество событий data:', count);
+  });
 });
 
-app.get('/hour/', (_, res) => {
-  // TODO: Добавьте ваш логин
-  const formatter = new Intl.DateTimeFormat('ru-RU', {
-      hour: '2-digit',
-      hour12: false,
-      timeZone: 'Europe/Moscow'
-    });
-
-    const hour = formatter.format(new Date());
-    res.statusCode = 200;
-    res.end(hour);
+req.on('error', (e) => {
+  console.error(e);
 });
 
-
-const PORT = 443;
-
-http.createServer(app).listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+req.write(postData);
+req.end();
